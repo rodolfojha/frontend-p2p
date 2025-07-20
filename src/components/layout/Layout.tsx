@@ -1,9 +1,10 @@
 import React from 'react';
+import { Outlet } from 'react-router-dom'; // Importar Outlet si se usa aquí para rutas anidadas
 import { useAuthStore } from '../../store/authStore';
 import { LogOut, User, Bell, Settings } from 'lucide-react';
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode; // Hacer 'children' opcional
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -86,7 +87,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {children}
+          {/* Renderizar children si se pasan, o Outlet para rutas anidadas */}
+          {children || <Outlet />} 
         </div>
       </main>
     </div>

@@ -27,8 +27,14 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('jwt_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log(`Axios Interceptor: Token presente para la solicitud a ${config.url}`);
+  } else {
+    console.warn(`Axios Interceptor: No hay token en localStorage para la solicitud a ${config.url}`);
   }
   return config;
+}, (error) => {
+  console.error('Axios Interceptor: Error en la solicitud:', error);
+  return Promise.reject(error);
 });
 
 // Interceptor para manejar errores de autenticación
@@ -36,9 +42,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.error('Axios Interceptor: Recibido 401 Unauthorized. Limpiando token y redirigiendo a login.');
       localStorage.removeItem('jwt_token');
       localStorage.removeItem('user_role');
-      window.location.href = '/login';
+      window.location.href = '/login'; // Redirigir al login
     }
     return Promise.reject(error);
   }
@@ -84,6 +91,20 @@ export const transactionService = {
     return response.data;
   },
 
+  getAssignedTransactionsForCajero: async (): Promise<Transaccion[]> => {
+    try {
+      const response = await api.get('/transacciones/cajero/mis-asignadas'); 
+      return response.data;
+    } catch (error: any) {
+      console.error('Error al obtener transacciones asignadas para cajero:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        console.warn('Endpoint /transacciones/cajero/mis-asignadas no encontrado. Asegúrate de implementarlo en el backend.');
+        return []; 
+      }
+      throw error;
+    }
+  },
+
   acceptTransaction: async (transactionId: number): Promise<Transaccion> => {
     const response = await api.post(`/transacciones/aceptar/${transactionId}`);
     return response.data;
@@ -98,6 +119,11 @@ export const transactionService = {
 
   markCompleted: async (transactionId: number): Promise<Transaccion> => {
     const response = await api.post(`/transacciones/marcar-completada/${transactionId}`);
+    return response.data;
+  },
+
+  cancelTransaction: async (transactionId: number): Promise<Transaccion> => {
+    const response = await api.post(`/transacciones/cancelar/${transactionId}`);
     return response.data;
   },
 

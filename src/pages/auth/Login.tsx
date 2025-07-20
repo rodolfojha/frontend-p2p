@@ -10,15 +10,32 @@ export const Login: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+  const { login, isLoading, error, clearError, isAuthenticated, user } = useAuthStore(); // Asegurarse de obtener 'user' del store
   const navigate = useNavigate();
 
-  // Redirigir si ya está autenticado
+  // Redirigir si ya está autenticado o después de un login exitoso
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
+    if (isAuthenticated && user) { // Verificar también que el objeto user esté disponible
+      let redirectPath = '/'; // Ruta por defecto
+
+      switch (user.rol) {
+        case 'administrador':
+          redirectPath = '/admin';
+          break;
+        case 'cajero':
+          redirectPath = '/cajero';
+          break;
+        case 'vendedor':
+          redirectPath = '/vendedor';
+          break;
+        default:
+          // Si el rol no coincide con ninguno, puedes redirigir a una página genérica o al login
+          console.warn('Rol de usuario desconocido, redirigiendo a la raíz.');
+          break;
+      }
+      navigate(redirectPath, { replace: true }); // Usar replace para evitar historial de navegación
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]); // Dependencias: isAuthenticated, user, navigate
 
   // Limpiar errores al cambiar campos
   useEffect(() => {
@@ -39,15 +56,16 @@ export const Login: React.FC = () => {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
+      // Puedes mostrar un error si los campos están vacíos
       return;
     }
 
     try {
       await login(formData);
-      navigate('/dashboard');
-    } catch (error) {
-      // El error ya está manejado en el store
-      console.error('Error en login:', error);
+      // La redirección se manejará en el useEffect después de que isAuthenticated y user se actualicen
+    } catch (loginError) {
+      // El error ya está manejado en el store y se mostrará en la UI
+      console.error('Error en login:', loginError);
     }
   };
 

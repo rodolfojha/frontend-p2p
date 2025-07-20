@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   requiredRole?: 'vendedor' | 'cajero' | 'administrador';
-  allowedRoles?: string[];
+  allowedRoles?: string[]; // Mantener como string[] para flexibilidad, pero la comparación será UCASE
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
@@ -48,8 +48,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" replace />;
   }
 
+  // Convertir el rol del usuario a mayúsculas para la comparación
+  const userRoleUpperCase = user.rol.toUpperCase();
+
   // Verificar rol específico
-  if (requiredRole && user.rol !== requiredRole) {
+  if (requiredRole && userRoleUpperCase !== requiredRole.toUpperCase()) { // Comparar en mayúsculas
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -69,7 +72,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Verificar roles permitidos
-  if (allowedRoles && !allowedRoles.includes(user.rol)) {
+  if (allowedRoles && !allowedRoles.map(role => role.toUpperCase()).includes(userRoleUpperCase)) { // Mapear y comparar en mayúsculas
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -88,5 +91,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  return <>{children}</>;
+  // Renderizar children si se pasan, o Outlet para rutas anidadas
+  return <>{children || <Outlet />}</>;
 };
