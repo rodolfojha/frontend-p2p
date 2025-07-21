@@ -1,94 +1,78 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom'; // Importar Outlet si se usa aquí para rutas anidadas
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { LogOut, User, Bell, Settings } from 'lucide-react';
+import { Home, LogOut, Settings, Users, DollarSign, MessageCircle, BarChart, User } from 'lucide-react';
 
-interface LayoutProps {
-  children?: React.ReactNode; // Hacer 'children' opcional
-}
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+    navigate('/login');
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'vendedor': return 'bg-blue-100 text-blue-800';
-      case 'cajero': return 'bg-green-100 text-green-800';
-      case 'administrador': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Determinar los enlaces del sidebar basados en el rol del usuario
+  const sidebarLinks = [
+    { name: 'Inicio', path: '/', icon: Home, roles: ['administrador', 'cajero', 'vendedor'] },
+    { name: 'Admin', path: '/admin', icon: Users, roles: ['administrador'] },
+    { name: 'Cajero', path: '/cajero', icon: DollarSign, roles: ['cajero'] },
+    { name: 'Vendedor', path: '/vendedor', icon: MessageCircle, roles: ['vendedor'] },
+    // { name: 'Configuración', path: '/settings', icon: Settings, roles: ['administrador', 'cajero', 'vendedor'] },
+    // { name: 'Reportes', path: '/reports', icon: BarChart, roles: ['administrador'] },
+  ];
+
+  const userRole = user?.rol;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-primary">
-                P2P Platform
-              </h1>
-            </div>
-
-            {/* User Info */}
-            <div className="flex items-center space-x-4">
-              {/* Notifications */}
-              <button className="p-2 text-gray-400 hover:text-gray-500">
-                <Bell className="h-5 w-5" />
-              </button>
-
-              {/* User Menu */}
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <div className="flex-shrink-0">
-                    <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
-                      <User className="h-4 w-4" />
-                    </div>
-                  </div>
-                  <div className="hidden md:block">
-                    <div className="text-sm font-medium text-gray-900">
-                      {user?.nombreCompleto || 'Usuario'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {user?.email}
-                    </div>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user?.rol || '')}`}>
-                    {user?.rol}
-                  </span>
-                </div>
-
-                {/* Settings */}
-                <button className="p-2 text-gray-400 hover:text-gray-500">
-                  <Settings className="h-5 w-5" />
-                </button>
-
-                {/* Logout */}
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                  title="Cerrar sesión"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
+    <div className="flex min-h-screen bg-gray-900 text-gray-100">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-800 p-4 border-r border-gray-700 flex flex-col">
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-bold text-yellow-500">P2P<span className="text-white">System</span></h1>
+        </div>
+        <nav className="flex-1">
+          <ul className="space-y-2">
+            {sidebarLinks.map((link) => (
+              (userRole && link.roles.includes(userRole)) && (
+                <li key={link.name}>
+                  <Link
+                    to={link.path}
+                    className="flex items-center space-x-3 px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200"
+                  >
+                    <link.icon className="h-5 w-5" />
+                    <span>{link.name}</span>
+                  </Link>
+                </li>
+              )
+            ))}
+          </ul>
+        </nav>
+        <div className="mt-auto pt-4 border-t border-gray-700">
+          {user && (
+            <div className="flex items-center space-x-3 mb-4 px-4 py-2 bg-gray-700 rounded-md">
+              <User className="h-5 w-5 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium text-white">{user.nombreCompleto}</p>
+                <p className="text-xs text-gray-400 capitalize">{user.rol}</p>
               </div>
             </div>
-          </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center space-x-3 px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
-      </header>
+      </aside>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Renderizar children si se pasan, o Outlet para rutas anidadas */}
-          {children || <Outlet />} 
+      {/* Main content */}
+      <main className="flex-1 overflow-auto">
+        {/* Eliminado max-w-7xl mx-auto y p-0 para permitir que el contenido ocupe todo el ancho */}
+        <div className="w-full h-full"> {/* Asegura que este div ocupe todo el espacio disponible */}
+          <Outlet />
         </div>
       </main>
     </div>

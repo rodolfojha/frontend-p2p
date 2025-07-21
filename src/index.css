@@ -6,10 +6,24 @@
   * {
     @apply border-border;
   }
+  html, body { /* Asegura que html y body ocupen toda la altura y no tengan márgenes/rellenos */
+    height: 100%; /* Asegura que html y body ocupen el 100% de la altura del viewport */
+    margin: 0; /* Elimina márgenes predeterminados */
+    padding: 0; /* Elimina rellenos predeterminados */
+    overflow: hidden; /* Evita barras de desplazamiento si no son necesarias */
+  }
   body {
     @apply bg-background text-foreground;
     /* Aplicar una fuente global si no está ya en tailwind.config.js */
     font-family: 'Inter', sans-serif; 
+  }
+  /* Asegura que el elemento #root ocupe todo el espacio disponible y elimina el padding */
+  #root {
+    max-width: none !important;
+    min-height: 100vh!important; /* Asegura que ocupe al menos el 100% del alto de la ventana */
+    margin: 0 !important; /* Fuerza la eliminación de cualquier margen */
+    padding: 0 !important; /* Fuerza la eliminación de cualquier relleno */
+    text-align: left; /* Alinea el texto a la izquierda por defecto */
   }
 }
 
